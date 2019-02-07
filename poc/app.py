@@ -23,19 +23,23 @@ We will enable the write-ahead mode in SQLite and we will initalise a different
 connection per thread that we will hold in a global object in the thread so it
 can be reused in the same thread.
 """
-from flask import Flask
-from poc.db import init_db, get_db
+from flask import Flask, jsonify
+from poc.db import init_db, close_db
+from poc.todo.controller import bp as todo_bp
 
 # Initialise our app.
 app = Flask(__name__)
 
 # Initialise the database module. We will register it in the context so it is
 # available globally for the thread.
-init_db(app)
+app.teardown_appcontext(close_db)
+app.cli.add_command(init_db)
+
+# Register the blueprints
+app.register_blueprint(todo_bp)
 
 
-@app.route('/')
-def index():
-    db = get_db()
-    c = db.cursor()
-    return str(next(c.execute('SELECT 1'))[0])
+@app.errorhandler(404)
+def not_found(error):
+    return (jsonify({'error': 'not_found'}), 404,
+            {'ContentType': 'application/json'})

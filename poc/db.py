@@ -11,17 +11,9 @@ DEFAULT_DB = '../poc.db'
 SCHEMA_PATH = '../schema.sql'
 
 
-def init_db(app):
-    """
-    Registers the database object in the context and the command in the cli
-    """
-    app.teardown_appcontext(close_db)
-    app.cli.add_command(populate_db)
-
-
-@click.command('db:populate')
+@click.command('db:init')
 @with_appcontext
-def populate_db():
+def init_db():
     """CLI command to populate empty databases. Database must exist."""
     db = get_db()
     with current_app.open_resource(SCHEMA_PATH, 'r') as f:
